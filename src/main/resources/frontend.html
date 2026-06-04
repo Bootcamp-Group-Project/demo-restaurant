@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Catering - 我的購物車</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-800 font-sans">
+
+    <header class="bg-blue-600 text-white shadow-md">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-wide">🏫 校園餐飲系統 - 購物車模擬</h1>
+            <div class="flex items-center space-x-2 bg-blue-700 px-3 py-1.5 rounded-lg text-sm">
+                <span>模擬用戶 ID (X-User-Id):</span>
+                <input type="number" id="userIdInput" value="1" class="w-12 text-center text-gray-900 font-bold rounded p-0.5 focus:outline-none">
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+            <h2 class="text-base font-semibold mb-4 text-gray-700 flex items-center">
+                <span class="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded mr-2">Dev Tool</span> 
+                快速模擬添加餐點
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">套餐或菜品 ID (menuId)</label>
+                    <input type="number" id="testMenuId" value="101" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">數量 (quantity)</label>
+                    <input type="number" id="testQuantity" value="1" min="1" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="addItemToCart()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg px-4 py-2.5 transition duration-150 shadow-sm">
+                        ➕ 加入購物車
+                    </button>
+                </div>
+            </div>
+            <div class="mt-3">
+                <label class="block text-xs font-medium text-gray-500 mb-1">特殊要求客製化 JSON (chosenMenuItems - 選填)</label>
+                <input type="text" id="testCustomOptions" placeholder='{"rice": "less", "spicy": "medium"}' class="w-full border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs text-gray-600">
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <section class="md:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-gray-900 flex items-center">
+                        🛒 購物車內容 
+                        <span id="badgeCount" class="ml-2 bg-gray-200 text-gray-700 text-xs font-bold px-2.5 py-0.5 rounded-full">0</span>
+                    </h2>
+                    <button onclick="clearCart()" class="text-xs font-medium text-red-500 hover:text-red-700 flex items-center transition">
+                        🗑️ 清空購物車
+                    </button>
+                </div>
+
+                <div id="cartItemsContainer" class="space-y-4">
+                    <div class="bg-white p-6 rounded-xl border border-gray-100 text-center text-gray-400 text-sm">
+                        🔄 正在載入購物車數據...
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2 class="text-lg font-bold text-gray-900 mb-4">💰 結帳金額預覽</h2>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 sticky top-4">
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between text-gray-500">
+                            <span>總數量：</span>
+                            <span id="summaryTotalQty" class="font-medium text-gray-900">0 件</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500">
+                            <span>餐點小計：</span>
+                            <span id="summaryBaseTotal" class="font-medium text-gray-900">HK$ 0.00</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 items-start">
+                            <span class="flex flex-col">
+                                <span>大額訂單訂金：</span>
+                                <span class="text-2xs text-gray-400 max-w-[120px] leading-tight">(滿 4 件加收)</span>
+                            </span>
+                            <span id="summaryDeposit" class="font-medium text-gray-900">HK$ 0.00</span>
+                        </div>
+                        
+                        <hr class="my-4 border-gray-100">
+                        
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-base font-bold text-gray-900">估計總額：</span>
+                            <span id="summaryFinalTotal" class="text-xl font-black text-blue-600">HK$ 0.00</span>
+                        </div>
+                    </div>
+
+                    <button id="checkoutBtn" disabled class="w-full mt-6 bg-gray-300 text-gray-500 font-bold py-3 px-4 rounded-xl transition duration-150 cursor-not-allowed text-center text-sm shadow-sm">
+                        請先添加可用商品
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-2 text-sm z-50">
+        <span id="toastMsg">提示訊息</span>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1/carts';
+
+        // 取得當前模擬的用戶 ID
+        function getUserId() {
+            return document.getElementById('userIdInput').value || '1';
+        }
+
+        // 當使用者修改模擬用戶 ID 時，自動重新整理購物車內容
+        document.getElementById('userIdInput').addEventListener('change', () => {
+            showToast(`已切換至用戶 ID: ${getUserId()}`);
+            loadCartPreview();
+        });
+
+        // 1. 核心方法：拉取並渲染後端 Pre-checkout 引擎的數據
+        async function loadCartPreview() {
+            const container = document.getElementById('cartItemsContainer');
+            try {
+                const response = await fetch(`${API_BASE}/pre-checkout`, {
+                    method: 'GET',
+                    headers: { 'X-User-Id': getUserId() }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        renderEmptyCart();
+                        return;
+                    }
+                    throw new Error('無法取得購物車資訊');
+                }
+
+                const data = await response.json();
+                renderCart(data);
+
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `
+                    <div class="bg-red-50 text-red-600 p-6 rounded-xl border border-red-100 text-center text-sm font-medium">
+                        ❌ 載入購物車失敗，請確保後端伺服器已啟動。
+                    </div>
+                `;
+            }
+        }
+
+        // 2. 核心方法：添加/加碼品項到購物車
+        async function addItemToCart() {
+            const menuId = document.getElementById('testMenuId').value;
+            const quantity = document.getElementById('testQuantity').value;
+            const chosenMenuItems = document.getElementById('testCustomOptions').value;
+
+            if (!menuId || quantity < 1) {
+                showToast('❌ 請填入正確的 Menu ID 且數量必須大於 0');
+                return;
+            }
+
+            const payload = {
+                menuId: parseInt(menuId),
+                quantity: parseInt(quantity),
+                chosenMenuItems: chosenMenuItems.trim() === "" ? null : chosenMenuItems
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/items`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-Id': getUserId()
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.status === 422 || response.status === 400) {
+                    const errorMsg = await response.text();
+                    showToast(`⚠️ 抱歉：${errorMsg}`);
+                    return;
+                }
+
+                if (!response.ok) throw new Error('新增失敗');
+
+                showToast('🎉 成功加入購物車');
+                loadCartPreview(); // 刷新網頁狀態
+
+            } catch (error) {
+                showToast('❌ 操作失敗，可能該品項已售罄或庫存不足');
+            }
+        }
+
+        // 3. 核心方法：清空購物車
+        async function clearCart() {
+            try {
+                const response = await fetch(API_BASE, {
+                    method: 'DELETE',
+                    headers: { 'X-User-Id': getUserId() }
+                });
+
+                if (!response.ok) throw new Error('無法清空');
+                
+                showToast('🗑️ 購物車已全部清空');
+                loadCartPreview();
+
+            } catch (error) {
+                showToast('❌ 清空操作失敗');
+            }
+        }
+
+        // UI 渲染：有資料時的狀態排版
+        function renderCart(data) {
+            const container = document.getElementById('cartItemsContainer');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            
+            // 更新右側金額卡片
+            document.getElementById('badgeCount').innerText = data.items ? data.items.length : 0;
+            document.getElementById('summaryTotalQty').innerText = `${data.totalQuantity} 件`;
+            document.getElementById('summaryBaseTotal').innerText = `HK$ ${data.baseTotal.toFixed(2)}`;
+            document.getElementById('summaryDeposit').innerText = `HK$ ${data.depositAmount.toFixed(2)}`;
+            document.getElementById('summaryFinalTotal').innerText = `HK$ ${data.finalEstimatedTotal.toFixed(2)}`;
+
+            if (!data.items || data.items.length === 0) {
+                renderEmptyCart();
+                return;
+            }
+
+            container.innerHTML = '';
+            let hasBlockingIssue = false;
+
+            // 走訪每一個項目並組裝 HTML 節點
+            data.items.forEach(item => {
+                // 如果後端返回的 status 包含 OUT_OF_STOCK，或訊息含有售罄、不足，即開啟警示 UI
+                const isSoldOut = item.status === 'OUT_OF_STOCK' || (item.statusMessage && item.statusMessage.toUpperCase().includes('SOLD OUT'));
+                const isInsufficient = item.statusMessage && (item.statusMessage.includes('Insufficient') || item.statusMessage.includes('不足'));
+                const isInvalid = isSoldOut || isInsufficient;
+
+                if (isInvalid) {
+                    hasBlockingIssue = true;
+                }
+
+                const cardHtml = `
+                    <div class="bg-white p-5 rounded-xl border ${isInvalid ? 'border-red-200 bg-red-200/10' : 'border-gray-100 shadow-sm'} transition flex items-center justify-between">
+                        <div class="space-y-1">
+                            <div class="flex items-center space-x-2">
+                                <h3 class="font-bold text-gray-900 text-base">套餐/餐點 ID: ${item.menuId}</h3>
+                                ${isSoldOut ? '<span class="bg-red-500 text-white text-3xs px-2 py-0.5 rounded-full font-black tracking-wider">SOLD OUT 售罄</span>' : ''}
+                                ${isInsufficient ? `<span class="bg-amber-500 text-white text-3xs px-2 py-0.5 rounded-full font-bold">庫存不足</span>` : ''}
+                            </div>
+                            <p class="text-xs text-gray-400">單價：HK$ ${item.unitPrice.toFixed(2)}</p>
+                        </div>
+
+                        <div class="flex items-center space-x-6 text-right">
+                            <div>
+                                <span class="text-xs text-gray-500 block">數量</span>
+                                <span class="font-semibold text-gray-900 text-sm">${item.quantity} 份</span>
+                            </div>
+                            <div class="w-24">
+                                <span class="text-xs text-gray-500 block">小計</span>
+                                <span class="font-bold text-sm ${isInvalid ? 'text-red-500 line-through' : 'text-gray-900'}">HK$ ${item.subTotal.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    ${isInvalid ? `<p class="text-xs text-red-600 font-medium -mt-3 ml-2">⚠️ 後端阻斷警報：${item.statusMessage}</p>` : ''}
+                `;
+                container.innerHTML += cardHtml;
+            });
+
+            // 依據是否有阻斷問題（售罄/庫存不足）來鎖定或啟用結帳按鈕
+            if (hasBlockingIssue) {
+                checkoutBtn.disabled = true;
+                checkoutBtn.className = "w-full mt-6 bg-red-400 text-white font-bold py-3 px-4 rounded-xl cursor-not-allowed text-center text-sm shadow-sm";
+                checkoutBtn.innerText = "含有已售罄/無庫存商品";
+            } else {
+                checkoutBtn.disabled = false;
+                checkoutBtn.className = "w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition duration-150 text-center text-sm shadow-sm active:scale-98 cursor-pointer";
+                checkoutBtn.innerText = "🚀 進入收銀台結帳";
+            }
+        }
+
+        // UI 渲染：空購物車狀態
+        function renderEmptyCart() {
+            document.getElementById('cartItemsContainer').innerHTML = `
+                <div class="bg-white p-12 rounded-xl border border-dashed border-gray-200 text-center text-gray-400 text-sm">
+                    🍃 購物車空空如也，快去挑選一些美味的校園午餐吧！
+                </div>
+            `;
+            document.getElementById('badgeCount').innerText = 0;
+            document.getElementById('summaryTotalQty').innerText = "0 件";
+            document.getElementById('summaryBaseTotal').innerText = "HK$ 0.00";
+            document.getElementById('summaryDeposit').innerText = "HK$ 0.00";
+            document.getElementById('summaryFinalTotal').innerText = "HK$ 0.00";
+            
+            const btn = document.getElementById('checkoutBtn');
+            btn.disabled = true;
+            btn.className = "w-full mt-6 bg-gray-300 text-gray-500 font-bold py-3 px-4 rounded-xl cursor-not-allowed text-center text-sm shadow-sm";
+            btn.innerText = "請先添加可用商品";
+        }
+
+        // 簡易 UI Toast 浮動視窗彈出
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.addCustomStyles;
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3500);
+        }
+
+        // 網頁開啟時，自動預加載數據
+        window.onload = loadCartPreview;
+    </script>
+</body>
+</html>
